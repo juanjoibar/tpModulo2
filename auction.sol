@@ -20,7 +20,7 @@ contract subasta {
 constructor(){
     owner = msg.sender;
     intialValue = 1 gwei ; //value intial
-    bidDuracion = block.timestamp + 7 days;
+    bidDuracion = block.timestamp + 7 days; //
     saltoBid = 5;
     extenbidTime = 10; // condicion si falta 10 minutos
 
@@ -45,6 +45,7 @@ mapping (address => uint256) private balance;
 
 modifier verifyBid(){
     require(flagEndBid ==0, "The auction is over");
+    require(block.timestamp <= bidDuracion, "The auction has expired");
     _;
 }
 
