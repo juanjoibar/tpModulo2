@@ -2,7 +2,7 @@
 pragma solidity >=0.8.12;
 
 
-contract subasta {
+contract auction {
 
     uint8 private flagEndBid; //flag to indicate the end of the auction - bandera para saber la finalizacion de la subasta
 
@@ -20,9 +20,9 @@ contract subasta {
 constructor(){
     owner = msg.sender;
     intialValue = 1 gwei ; //value intial
-    bidDuracion = block.timestamp + 7 days; //
-    saltoBid = 5;
-    extenbidTime = 10; // condicion si falta 10 minutos
+    bidDuracion = block.timestamp + 7 days; // duration auction 7 days
+    saltoBid = 5; //Must be at least 5% higher
+    extenbidTime = 10; // 10 minutes extra - condicion si falta 10 minutos
 
 
 }
@@ -34,9 +34,9 @@ struct offer{
     uint256 amount;
     uint256 offerDate;
 }
-offer[] private offers; //array de participantes que ofertaron 
+offer[] private offers; //array of participants who made bids - array de participantes que ofertaron 
 
-address[] private uniqueAddr; // array para guardar las address uni
+address[] private uniqueAddr; // array to store unique addresses - array para guardar las direc unicas
 
 mapping (address => uint256) private balance; 
 
@@ -78,7 +78,7 @@ function setOffer() external verifyBid payable {
         uint256 _len = offers.length;
         uint8 _flagExistOffer ; 
         for (uint256 i = 0 ; i < _len ; i++){  // 
-            if (_addrBidder == offers[i].bidder){ // verifica que si ya oferto y cambia la oferta
+            if (_addrBidder == offers[i].bidder){ // check if the bidder already placed an offer and update it - verifica que si ya oferto y cambia la oferta
                 offers[i].amount = _offerAmount;
                 offers[i].offerDate = block.timestamp;
                 _flagExistOffer = 1;
@@ -88,14 +88,14 @@ function setOffer() external verifyBid payable {
 
 
     
-        // si no existe oferta de este antes
+        // if this bidder has not placed an offer before - si no existe oferta de este antes
         if (_flagExistOffer == 0) {
         offers.push(offer(_addrBidder, _offerAmount, block.timestamp));
         }
         if(balance[_addrBidder]==0){
         uniqueAddr.push(_addrBidder);
         }
-        balance[_addrBidder] += _offerAmount; // se guarda el valor de la oferta en el balance del participante
+        balance[_addrBidder] += _offerAmount; //  store the bid value in the participant's balance - se guarda el valor de la oferta en el balance del participante
 
         emit Newoffer(_addrBidder, _offerAmount, block.timestamp  );
         if (block.timestamp >= (bidDuracion - extenbidTime)){
@@ -103,7 +103,7 @@ function setOffer() external verifyBid payable {
         }
     }    
     else {
-        //revisar
+      
         revert("offer is low");
     }
 
@@ -138,7 +138,7 @@ function getWin() external view returns (address, uint256){
  function returnOffers() external verifyOwner activarBid {
    uint256 _returnAmount; 
    uint256 _maxOffer = maxOfferta;
-   uint256 _len = uniqueAddr.length; //ver
+   uint256 _len = uniqueAddr.length; // check length
 
    for (uint256 i=0; i< _len ; i++){
         if(balance[uniqueAddr[i]] < _maxOffer){
@@ -166,9 +166,9 @@ function returnParcial() external verifyBid {
         }
 
     }
-    require(_flagExist ==1, "No es valido offertante");
+    require(_flagExist ==1, "Not a valid bidder");
     _returnAmount = balance[_sender] - offers[i].amount;
-    require(_returnAmount >0, "No hay para retirar"); // se valida reembolso
+    require(_returnAmount >0, "Nothing to withdraw"); // validate refund
     balance[_sender] = balance[ _sender] - _returnAmount;
     payable (_sender).transfer(_returnAmount);
 }
